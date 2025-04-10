@@ -33,7 +33,7 @@ reviewRouter.route('/')
     res.status = 403;
     res.end('PUT operation not supperted on /reviews');
 })
-.delete(authenticate.verifyUser, (req, res, next) => { // Add admin privileges
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => { // Add admin privileges
     Review.deleteMany()
     .then(response => {
         res.statusCode = 200;
@@ -59,7 +59,7 @@ reviewRouter.route('/:reviewId')
     })
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(authenticate.verifyUser,  authenticate.verifyAdmin, (req, res, next) => {
     res.status = 403;
     res.end('POST operation not supperted on /reviews');
 })
@@ -68,7 +68,7 @@ reviewRouter.route('/:reviewId')
     .then(review => {
         console.log(review)
         if (review) {
-            if ((review.author._id).equals(req.user._id)) {
+            if ((review.author._id).equals(req.user._id) || req.user.admin) {
                 if (req.body.rating) {
                     review.rating = req.body.rating;
                 }
@@ -100,7 +100,7 @@ reviewRouter.route('/:reviewId')
     Review.findById(req.params.reviewId)
     .then(review => {
         if (review) {
-            if ((review.author._id).equals(req.user._id)) {
+            if ((review.author._id).equals(req.user._id) || req.user.admin) {
                 review.deleteOne()
                 .then(review => {
                     res.statusCode = 200;
