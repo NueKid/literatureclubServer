@@ -9,6 +9,7 @@ const config = require('./config');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const campsiteRouter = require('./routes/campsiteRouter');
+const reviewRouter = require('./routes/reviews');
 
 // Mongoose Connection
 const mongoose = require('mongoose');
@@ -35,6 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/campsites', campsiteRouter);
+app.use('/reviews', reviewRouter);
 
 // Passport Initialize Authentication
 app.use(passport.initialize());
