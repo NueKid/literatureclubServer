@@ -96,7 +96,6 @@ router.route('/:userId/readinglist')
         User.findById(req.params.userId)
         .then(user => {
             if (user && user._id.equals(req.user._id)) {
-                // if (!user.readinglist.includes(req.body.key)) {
                 if (!user.readinglist.some(book => book.key === req.body.key)) {
                     user.readinglist.push(req.body)
                     user.save()
