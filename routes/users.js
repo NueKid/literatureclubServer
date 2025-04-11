@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/user');
 const passport = require('passport');
 const authenticate = require('../authenticate');
+const user = require('../models/user');
 
 const router = express.Router();
 
@@ -70,5 +71,144 @@ router.get('/logout', (req, res, next) => {
         return next(err);
     }
 });
+
+router.route('/:userId/readinglist')
+    .get(authenticate.verifyUser, (req, res, next) => {
+        User.findById(req.params.userId)
+        .then(user => {
+            if (user) {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'appplication/json');
+                res.json(user.readinglist);
+            } else {
+                err = new Error(`User ${req.params.userId} not found`);
+                err.status = 404;
+                return next(err);
+            }
+        })
+        .catch(err => next(err));
+    })
+    .put(authenticate.verifyUser, (req, res) => {
+        res.statusCode = 403;
+        res.end(`PUT operation not supported on /users/${req.params.userId}/readinglist`);
+    })
+    .post(authenticate.verifyUser, (req, res, next) => {
+        User.findById(req.params.userId)
+        .then(user => {
+            if (user && user._id.equals(req.user._id)) {
+                // if (!user.readinglist.includes(req.body.key)) {
+                if (!user.readinglist.some(book => book.key === req.body.key)) {
+                    user.readinglist.push(req.body)
+                    user.save()
+                    .then(user => {
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(user.readinglist);
+                    })
+                    .catch(err => next(err));
+                } else {
+                    err = new Error(`Book ${req.body.title} already exists in reading list`);
+                    err.status = 404;
+                    return next(err);
+                }
+            } else {
+                err = new Error(`You are not authorized to add Book ${req.body.title} to this reading list`);
+                err.status = 403;
+                return next(err);
+            }
+        })
+        .catch(err => next(err));
+    })
+    .delete(authenticate.verifyUser, (req, res) => {
+        res.statusCode = 403;
+        res.end(`DELETE operation not supported on /users/${req.params.userId}/readinglist`);
+    })
+
+    router.route('/:userId/readinglist/:bookId')
+    .get(authenticate.verifyUser, (req, res, next) => {
+        User.findById(req.params.userId)
+        .then(user => {
+            if(user && user.readinglist.id(req.params.bookId)) {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(user.readinglist.id(req.params.bookId));
+            } else if (!user) {
+                err = new Error(`User ${req.params.userId} not found`);
+                err.status = 404;
+                return next(err);
+            } else {
+                err = new Error(`Book ${req.params.bookId} not found in reading list`);
+                err.status = 404;
+                return next(err);
+            }
+        })
+        .catch(err => next(err));
+    })
+    .post(authenticate.verifyUser, (req, res) => {
+        res.statusCode = 403;
+        res.end(`POST operation not supported on /users/${req.params.userId}/readinglist/${req.params.bookId}`);
+    })
+    .put(authenticate.verifyUser, (req, res, next) => {
+        User.findById(req.params.userId)
+        .then(user => {
+            if (user && user._id.equals(req.user._id)) {
+                if(user && user.readinglist.id(req.params.bookId)) {
+                    if(req.body.markRead) {
+                        user.readinglist.id(req.params.bookId).markRead = req.body.markRead;
+                    }
+                    user.save()
+                    .then(user => {
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(user.readinglist.id(req.params.bookId));
+                    })
+                    .catch(err => next(err));
+                } else if (!user) {
+                    err = new Error(`User ${req.params.userId} not found`);
+                    err.status = 404;
+                    return next(err);
+                } else {
+                    err = new Error(`Book ${req.params.bookId} not found in reading list`);
+                    err.status = 404;
+                    return next(err);
+                }
+            } else {
+                err = new Error(`You are not authorized to update Book ${req.params.bookId} in this reading list`);
+                err.status = 403;
+                return next(err);
+            }
+        })
+        .catch(err => next(err));
+    })
+    .delete(authenticate.verifyUser, (req, res, next) => {
+        user.findById(req.params.userId)
+        .then(user => {
+            if (user && user._id.equals(req.user._id)) {
+                if (user && user.readinglist.id(req.params.bookId)) {
+                    user.readinglist.id(req.params.bookId).deleteOne();
+                    user.save()
+                    .then(user => {
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(user.readinglist);
+                    })
+                    .catch(err => next(err));
+                } else if (!user) {
+                    err = new Error(`User ${req.params.userId} not found`);
+                    err.status = 404;
+                    return next(err);
+                }
+                else {
+                    err = new Error(`Book ${req.params.bookId} not found in reading list`);
+                    err.status = 404;
+                    return next(err);
+                }
+            } else {
+                err = new Error(`You are not authorized to delete Book ${req.params.bookId} from this reading list`);
+                err.status = 403;
+                return next(err);
+            }
+        })
+    })
 
 module.exports = router;
