@@ -3,11 +3,12 @@ const User = require('../models/user');
 const passport = require('passport');
 const authenticate = require('../authenticate');
 const user = require('../models/user');
+const cors = require('./cors');
 
 const router = express.Router();
 
 // GET user listings
-router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
+router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
     User.find()
     .then(response => {
         res.statusCode = 200;
@@ -16,7 +17,7 @@ router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function (req
     })
 });
 
-router.get('/:userId', authenticate.verifyUser, (req, res, next) => {
+router.get('/:userId', cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     User.findById(req.params.userId)
     .then(response => {
         res.statusCode = 200;
@@ -26,7 +27,7 @@ router.get('/:userId', authenticate.verifyUser, (req, res, next) => {
     .catch(err => next(err));
 });
 
-router.post('/signup', (req, res) => {
+router.post('/signup', cors.corsWithOptions, (req, res) => {
     const user = new User({username: req.body.username});
 
     User.register(user, req.body.password)
@@ -53,14 +54,14 @@ router.post('/signup', (req, res) => {
         });
 });
 
-router.post('/login', passport.authenticate('local', {session: false}), (req, res) => {
+router.post('/login', cors.corsWithOptions, passport.authenticate('local', {session: false}), (req, res) => {
     const token = authenticate.getToken({_id: req.user._id});
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.json({success: true, token: token, status: 'You are successfully logged in!'});
 });
 
-router.get('/logout', (req, res, next) => {
+router.get('/logout', cors.corsWithOptions, (req, res, next) => {
     if (req.session) {
         req.session.destroy();
         res.clearCookie('session-id');
@@ -72,8 +73,16 @@ router.get('/logout', (req, res, next) => {
     }
 });
 
+router.post('/logout', cors.corsWithOptions, (req, res, next) => {
+    req.logout((err) => {
+        if (err) { return next(err); }
+        res.redirect('/');
+    });
+});
+
 router.route('/:userId/readinglist')
-    .get(authenticate.verifyUser, (req, res, next) => {
+.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+    .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
         User.findById(req.params.userId)
         .then(user => {
             if (user) {
@@ -88,11 +97,11 @@ router.route('/:userId/readinglist')
         })
         .catch(err => next(err));
     })
-    .put(authenticate.verifyUser, (req, res) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
         res.statusCode = 403;
         res.end(`PUT operation not supported on /users/${req.params.userId}/readinglist`);
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         User.findById(req.params.userId)
         .then(user => {
             if (user && user._id.equals(req.user._id)) {
@@ -118,13 +127,14 @@ router.route('/:userId/readinglist')
         })
         .catch(err => next(err));
     })
-    .delete(authenticate.verifyUser, (req, res) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
         res.statusCode = 403;
         res.end(`DELETE operation not supported on /users/${req.params.userId}/readinglist`);
     })
 
     router.route('/:userId/readinglist/:bookId')
-    .get(authenticate.verifyUser, (req, res, next) => {
+    .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+    .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
         User.findById(req.params.userId)
         .then(user => {
             if(user && user.readinglist.id(req.params.bookId)) {
@@ -143,11 +153,11 @@ router.route('/:userId/readinglist')
         })
         .catch(err => next(err));
     })
-    .post(authenticate.verifyUser, (req, res) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
         res.statusCode = 403;
         res.end(`POST operation not supported on /users/${req.params.userId}/readinglist/${req.params.bookId}`);
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         User.findById(req.params.userId)
         .then(user => {
             if (user && user._id.equals(req.user._id)) {
@@ -179,7 +189,7 @@ router.route('/:userId/readinglist')
         })
         .catch(err => next(err));
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         user.findById(req.params.userId)
         .then(user => {
             if (user && user._id.equals(req.user._id)) {
