@@ -5,6 +5,7 @@ const logger = require('morgan');
 const passport = require('passport');
 const authenticate = require('./authenticate');
 const config = require('./config');
+const uploadRouter = require('./routes/uploadRouter');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -46,6 +47,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/campsites', campsiteRouter);
 app.use('/reviews', reviewRouter);
+app.use('/imageUpload', uploadRouter);
 
 // Passport Initialize Authentication
 app.use(passport.initialize());
