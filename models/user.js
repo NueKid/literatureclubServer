@@ -27,6 +27,7 @@ const readlinglistSchema = new Schema({
 });
 
 const userSchema = new Schema({
+    facebookId: String,
     firstname: {
         type: String,
         default: ''
