@@ -5,12 +5,13 @@ const logger = require('morgan');
 const passport = require('passport');
 const authenticate = require('./authenticate');
 const config = require('./config');
-const uploadRouter = require('./routes/uploadRouter');
+
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const campsiteRouter = require('./routes/campsiteRouter');
 const reviewRouter = require('./routes/reviews');
+const uploadRouter = require('./routes/uploadRouter');
 
 // Mongoose Connection
 const mongoose = require('mongoose');

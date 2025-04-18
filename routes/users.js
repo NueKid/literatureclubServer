@@ -17,6 +17,15 @@ router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.veri
     })
 });
 
+router.get('/facebook/token', passport.authenticate('facebook-token', { session: false }), (req, res) => {
+    if (req.user) {
+        const token = authenticate.getToken({_id: req.user._id});
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json({success: true, token: token, status: 'You are successfully logged in!'});
+    }
+});
+
 router.get('/:userId', cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     User.findById(req.params.userId)
     .then(response => {
@@ -52,15 +61,6 @@ router.post('/signup', cors.corsWithOptions, (req, res) => {
             res.setHeader('Content-Type', 'application/json');
             res.json({err: err});
         });
-});
-
-router.get('/facebook/token', passport.authenticate('facebook-token', { session: false }), (req, res) => {
-    if (req.user) {
-        const token = authenticate.getToken({_id: req.user._id});
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json({success: true, token: token, status: 'You are successfully logged in!'});
-    }
 });
 
 router.post('/login', cors.corsWithOptions, passport.authenticate('local', {session: false}), (req, res) => {

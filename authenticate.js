@@ -1,5 +1,5 @@
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
+const localStrategy = require('passport-local').Strategy;
 const User = require('./models/user');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
@@ -8,13 +8,13 @@ const FacebookTokenStrategy = require('passport-facebook-token');
 
 const config = require('./config');
 
-exports.local = passport.use(new LocalStrategy(User.authenticate()));
+exports.local = passport.use(new localStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 exports.getToken = user => {
     return jwt.sign(user, config.secretKey, {expiresIn: 3600});
-};
+}
 
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
@@ -26,7 +26,7 @@ exports.jwtPassport = passport.use(
         (jwt_payload, done) => {
             console.log('JWT payload:', jwt_payload);
 
-            User.findOne({_id: jwt_payload._id })
+            User.findOne({_id: jwt_payload._id})
             .then((user) => {
                 if (user) {
                     return done(null, user);
@@ -43,8 +43,8 @@ exports.verifyAdmin = (req, res, next) => {
     if (req.user.admin) {
         return next();
     } else {
-        const err = new Error('You are not authorized to perform this operation!');
-        err.status = 403;
+        err = new Error('You are not authorized to perform this operation!');
+        res.statusCode = 403;
         return next(err);
     }
 };
