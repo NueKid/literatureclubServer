@@ -40,7 +40,7 @@ uploadRouter.route('/')
 })
 .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
     res.statusCode = 403;
-    res.end('DELETE operation not supported on /imageUpload');
+    res.end('DELETE operation not supported on /imageUpload')
 });
 
 module.exports = uploadRouter;
