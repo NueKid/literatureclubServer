@@ -5,22 +5,27 @@ const logger = require('morgan');
 const passport = require('passport');
 const authenticate = require('./authenticate');
 const config = require('./config');
-
+const functions = require('@google-cloud/functions-framework');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
-const campsiteRouter = require('./routes/campsiteRouter');
 const reviewRouter = require('./routes/reviews');
 const uploadRouter = require('./routes/uploadRouter');
 
 // Mongoose Connection
 const mongoose = require('mongoose');
 
-const url = config.mongoUrl;
-const connect = mongoose.connect(url, {});
-connect.then(() => console.log('Connected correctly to server'),
-  err => console.log(err)
-);
+const url = config.mongoConnectionString;
+const connect = async () => {
+    await mongoose.connect(url, {
+        useCreateIndex: true,
+        useFindAndModify: false,
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    });
+};
+
+connect().catch((err) => functions.logger.log(err));
 
 const app = express();
 
@@ -46,7 +51,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/campsites', campsiteRouter);
 app.use('/reviews', reviewRouter);
 app.use('/imageUpload', uploadRouter);
 
@@ -84,4 +88,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+exports.literatureclubServer = app;
